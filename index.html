@@ -44,6 +44,7 @@ let omega = 1.6;
 // shards & motes & particles & popups
 let shards = [], motes = [], parts = [], popups = [];
 let shardTimer = 0, moteTimer = 1.2;
+let pulseFx = 0, lastMilestone = 0;
 let shake = 0;
 let timeScale = 1, hitStop = 0;
 
@@ -142,6 +143,7 @@ function update(dt){
   for (const p of popups){ p.y -= 34*dt; p.life -= dt*0.9; }
   popups = popups.filter(p => p.life > 0);
   shake = Math.max(0, shake - dt*26);
+  pulseFx = Math.max(0, pulseFx - dt*1.6);
 
   if (state !== 'playing'){
     // idle orbit on title / death screens
@@ -181,6 +183,11 @@ function update(dt){
           if (ad < 0.17){ die(); return; }
           if (ad < 0.46){
             combo++; comboTimer = 4;
+            if (combo % 5 === 0 && combo !== lastMilestone){
+              lastMilestone = combo; pulseFx = 1;
+              tone(523, 0.22, 'triangle', 0.10); setTimeout(() => tone(784, 0.3, 'triangle', 0.10), 60);
+              const pc = playerPos(); popup(pc.x, pc.y - 52, 'COMBO ×' + combo + '!', '#ffffff');
+            }
             const pts = 10 * combo;
             score += pts;
             const p2 = playerPos();
@@ -283,6 +290,14 @@ function draw(){
   ctx.beginPath(); ctx.arc(CX, CY, STAR_R*pulse*1.9, 0, Math.PI*2); ctx.fill();
   ctx.fillStyle = '#fffbe8';
   ctx.beginPath(); ctx.arc(CX, CY, STAR_R*0.52*pulse, 0, Math.PI*2); ctx.fill();
+
+  // combo milestone pulse ring
+  if (pulseFx > 0){
+    ctx.globalAlpha = pulseFx * 0.7;
+    ctx.strokeStyle = '#ff4fd8'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(CX, CY, (1-pulseFx)*330 + 60, 0, Math.PI*2); ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
 
   // motes
   for (const m of motes){
