@@ -235,6 +235,12 @@ function draw(){
   const bg = ctx.createRadialGradient(CX, CY, 60, CX, CY, 640);
   bg.addColorStop(0, '#10102a'); bg.addColorStop(0.55, '#070716'); bg.addColorStop(1, '#030309');
   ctx.fillStyle = bg; ctx.fillRect(-20, -20, W+40, H+40);
+  const neb = [[210,180,300,'rgba(64,30,140,0.20)'],[700,640,340,'rgba(150,20,90,0.15)'],[660,170,240,'rgba(10,80,120,0.16)'],[170,700,260,'rgba(20,40,130,0.15)']];
+  for (const n of neb){
+    const ng = ctx.createRadialGradient(n[0], n[1], 10, n[0], n[1], n[2]);
+    ng.addColorStop(0, n[3]); ng.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = ng; ctx.fillRect(n[0]-n[2], n[1]-n[2], n[2]*2, n[2]*2);
+  }
   for (const s of stars){
     const tw = 0.35 + 0.65 * Math.abs(Math.sin(tGlobal*s.s + s.p));
     ctx.globalAlpha = tw * 0.8;
@@ -376,6 +382,11 @@ function draw(){
       ctx.font = 'bold 26px "Segoe UI", system-ui, sans-serif';
       ctx.fillStyle = '#ff4fd8';
       ctx.fillText('COMBO ×' + combo, CX, 54);
+      const w = 130, frac = Math.max(0, comboTimer/4);
+      ctx.fillStyle = 'rgba(255,79,216,0.25)';
+      ctx.fillRect(CX - w/2, 66, w, 5);
+      ctx.fillStyle = '#ff4fd8';
+      ctx.fillRect(CX - w/2, 66, w*frac, 5);
     }
   }
   if (state === 'title'){
