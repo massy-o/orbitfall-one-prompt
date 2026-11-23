@@ -48,6 +48,31 @@ let shake = 0;
 
 const DEMO = new URLSearchParams(location.search).has('demo');
 
+// ---------- tiny synthesized SFX (no audio files) ----------
+let AC = null;
+function audio(){
+  if (!AC){ try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){} }
+  if (AC && AC.state === 'suspended') AC.resume();
+  return AC;
+}
+function tone(freq, dur, type, vol, slideTo){
+  const ac = audio(); if (!ac) return;
+  const o = ac.createOscillator(), g = ac.createGain();
+  o.type = type || 'sine'; o.frequency.setValueAtTime(freq, ac.currentTime);
+  if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, ac.currentTime + dur);
+  g.gain.setValueAtTime(vol || 0.12, ac.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + dur);
+  o.connect(g); g.connect(ac.destination);
+  o.start(); o.stop(ac.currentTime + dur);
+}
+const sfx = {
+  switch: () => tone(520, 0.09, 'triangle', 0.10, 880),
+  mote:   () => { tone(880, 0.10, 'sine', 0.12); setTimeout(() => tone(1318, 0.14, 'sine', 0.10), 45); },
+  near:   () => tone(300, 0.16, 'sawtooth', 0.05, 720),
+  die:    () => { tone(220, 0.5, 'sawtooth', 0.16, 40); tone(110, 0.6, 'square', 0.10, 30); },
+  start:  () => { tone(440, 0.1, 'triangle', 0.10); setTimeout(() => tone(660, 0.12, 'triangle', 0.10), 70); },
+};
+
 function ringRadius(ring){ return ring === 0 ? R_IN : R_OUT; }
 function angDiff(a,b){ let d = (a-b) % (Math.PI*2); if (d > Math.PI) d -= Math.PI*2; if (d < -Math.PI) d += Math.PI*2; return Math.abs(d); }
 
@@ -73,14 +98,16 @@ function playerPos(){
 
 function switchRing(){
   player.ring = 1 - player.ring;
+  sfx.switch();
   const p = playerPos();
   burst(p.x, p.y, '#39e6ff', 10, 130);
 }
 
 function press(){
-  if (state === 'title'){ reset(); state = 'playing'; }
+  audio();
+  if (state === 'title'){ reset(); state = 'playing'; sfx.start(); }
   else if (state === 'playing'){ switchRing(); }
-  else if (state === 'dead' && performance.now() - deadAt > 700){ reset(); state = 'playing'; }
+  else if (state === 'dead' && performance.now() - deadAt > 700){ reset(); state = 'playing'; sfx.start(); }
 }
 window.addEventListener('keydown', e => {
   if (e.code === 'Space' || e.code === 'ArrowUp'){ e.preventDefault(); press(); }
@@ -153,6 +180,7 @@ function update(dt){
             score += pts;
             const p2 = playerPos();
             popup(p2.x, p2.y - 26, 'NEAR MISS +' + pts, '#ff4fd8');
+            sfx.near();
             burst(p2.x, p2.y, '#ff4fd8', 8, 110);
             shake = Math.max(shake, 3);
           }
@@ -178,6 +206,7 @@ function update(dt){
       score += pts; comboTimer = 4;
       const p2 = playerPos();
       popup(p2.x, p2.y - 26, '+' + pts, '#ffd94d');
+      sfx.mote();
       burst(p2.x, p2.y, '#ffd94d', 12, 140);
     }
   }
@@ -186,6 +215,7 @@ function update(dt){
 
 function die(){
   state = 'dead'; deadAt = performance.now();
+  sfx.die();
   const p = playerPos();
   burst(p.x, p.y, '#39e6ff', 46, 260);
   burst(p.x, p.y, '#ffffff', 20, 170);
