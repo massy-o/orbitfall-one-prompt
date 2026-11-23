@@ -177,7 +177,7 @@ function update(dt){
 
   // shards
   shardTimer -= dt;
-  if (shardTimer <= 0){ spawnShard(); shardTimer = (1.12 - d*0.57) * (0.75 + Math.random()*0.5); }
+  if (shardTimer <= 0){ spawnShard(); shardTimer = (1.0 - d*0.5) * (0.75 + Math.random()*0.5); if (runTime < 3) shardTimer = Math.max(shardTimer, 0.8); }
   for (const s of shards){
     s.age += dt; s.r -= s.speed * dt; s.rot += s.vr * dt;
     for (const ring of [0,1]){
